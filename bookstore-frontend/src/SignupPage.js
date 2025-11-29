@@ -3,6 +3,11 @@ import { useNavigate, Link } from "react-router-dom";
 import styled from "styled-components";
 import {AnimatePresence, motion} from "framer-motion";
 
+// ------------------------------------------------------------------
+// --- FIXED: Access Environment Variable ---
+// ------------------------------------------------------------------
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const Container = styled.div`
     height: 97vh;
     display: flex;
@@ -92,7 +97,8 @@ function SignupPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch("http://localhost:8080/api/auth/signup", {
+            // FIXED: Use API_BASE_URL here
+            const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -107,21 +113,26 @@ function SignupPage() {
                 }, 1500);
             }
             else if (response.status === 409) {
+                // Assuming 409 maps to the password requirement issue
                 setNotification({message: "Password must contain at least 8 letters.", success: false});
                 setTimeout(() => {
                     setNotification(null);
                 }, 1500);}
             else if (response.status === 408) {
-                    setNotification({ message: "This user already exists.", success: false });
-                }
+                // Assuming 408 maps to the user existence issue
+                setNotification({ message: "This user already exists.", success: false });
+                setTimeout(() => {
+                    setNotification(null);
+                }, 1500);}
             else {
-                setNotification({ message: "Signup Failed.", success: false });
+                setNotification({ message: `Signup Failed. Server Status: ${response.status}`, success: false });
                 setTimeout(() => {
                     setNotification(null)
                 }, 1500);
             }
         } catch (err) {
-            setNotification({ message: "Error Occurred.", success: false });
+            console.error("Signup API Error:", err);
+            setNotification({ message: "Error Occurred. Check connection.", success: false });
             setTimeout(() => {
                 setNotification(null)
             }, 1500);

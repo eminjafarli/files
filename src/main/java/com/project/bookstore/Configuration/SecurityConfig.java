@@ -51,7 +51,11 @@ public class SecurityConfig implements WebMvcConfigurer {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+
+        // 🚨 IMPORTANT: REPLACE the placeholder below with your actual deployed React frontend URL 🚨
         configuration.addAllowedOrigin("http://localhost:3000");
+        configuration.addAllowedOrigin("https://files-ovx9.onrender.com"); // <-- ADD YOUR LIVE FRONTEND URL HERE
+
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
         configuration.setAllowCredentials(true);
@@ -65,7 +69,8 @@ public class SecurityConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:3000")
+                // 🚨 IMPORTANT: REPLACE the placeholder below with your actual deployed React frontend URL 🚨
+                .allowedOrigins("http://localhost:3000", "https://files-ovx9.onrender.com") // <-- ADD YOUR LIVE FRONTEND URL HERE
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);

@@ -4,19 +4,26 @@ import EditUserModal from "./EditUserModal";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 
+// ------------------------------------------------------------------
+// --- FIXED: Access Environment Variable ---
+// ------------------------------------------------------------------
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const Container = styled.div`
     min-height: 80vh;
     background: #ffffff;
     font-family: Arial, sans-serif;
     padding: 40px;
 `;
+// ... (All other styled components are omitted for brevity)
+
 const SearchInput = styled.input`
-  padding: 10px;
-  width: 200px;
-  margin: 20px 0;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 16px;
+    padding: 10px;
+    width: 200px;
+    margin: 20px 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
 `;
 const Group1 = styled.div`
     display: flex;
@@ -94,6 +101,7 @@ function UsersDashboard() {
     const username = localStorage.getItem("username");
     const role = localStorage.getItem("role");
     const [searchTerm, setSearchTerm] = useState("");
+
     const handleUserDeleted = (id) => {
         setUsers((prevUsers) => prevUsers.filter((u) => u.id !== id));
         setShowEditModal(false);
@@ -101,7 +109,8 @@ function UsersDashboard() {
 
     useEffect(() => {
         axios
-            .get("http://localhost:8080/api/users", {
+            // FIXED: Use API_BASE_URL for fetching users
+            .get(`${API_BASE_URL}/api/users`, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("token")}`,
                 },
@@ -109,7 +118,8 @@ function UsersDashboard() {
             .then((res) => {
                 setUsers(res.data);
                 res.data.forEach((user) => {
-                    fetch(`http://localhost:8080/api/books/user/${user.id}`, {
+                    // FIXED: Use API_BASE_URL for fetching book counts
+                    fetch(`${API_BASE_URL}/api/books/user/${user.id}`, {
                         headers: {
                             Authorization: `Bearer ${localStorage.getItem("token")}`,
                         },
@@ -128,8 +138,10 @@ function UsersDashboard() {
                             console.error(`Error fetching books for user ${user.id}:`, err)
                         );
                 });
-            });
+            })
+            .catch((err) => console.error("Error fetching users:", err)); // Added error handling for initial fetch
     }, []);
+
     const filteredUsers = users.filter((user) => {
         const lowerSearch = searchTerm.toLowerCase();
         return (
@@ -146,7 +158,7 @@ function UsersDashboard() {
             </Header>
             <Text>Logged in as {username}</Text>
             <Group1>
-            <Text>Your Role: {role}</Text>
+                <Text>Your Role: {role}</Text>
                 <SearchInput
                     type="text"
                     placeholder="Search"
@@ -179,6 +191,8 @@ function UsersDashboard() {
                     user={selectedUser}
                     onClose={() => setShowEditModal(false)}
                     onUserDeleted={handleUserDeleted}
+                    // FIXED: Pass the API_BASE_URL to the child modal
+                    apiBaseUrl={API_BASE_URL}
                 />
             )}
         </Container>

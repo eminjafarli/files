@@ -7,35 +7,41 @@ import {useNavigate} from "react-router-dom";
 import EditBookModal from "./EditBookModal";
 import EditProfileModal from "./EditProfileModal";
 
+// ------------------------------------------------------------------
+// --- FIXED: Use Environment Variable for API Base URL ---
+// ------------------------------------------------------------------
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
+// All your styled components remain here...
 const Container = styled.div`
     min-height: 80vh;
     background: #ffffff;
     font-family: Arial, sans-serif;
     padding: 40px;
 `;
+// ... (All other styled components are omitted here for brevity)
+
+// Styled components continued (omitted for space)...
+
 const SearchInput = styled.input`
-  padding: 10px;
-  width: 200px;
-  margin: 20px 0;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 16px;
+    padding: 10px;
+    width: 200px;
+    margin: 20px 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
 `;
 const Group1 = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
 `;
-
-
 const Header = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30px;
 `;
-
 const Title = styled.h2`
     color: #333;
 `;
@@ -43,7 +49,6 @@ const Text = styled.h2`
     color: #4F4F4F;
     font-size:20px;
 `;
-
 const Card = styled.div`
     background: #f7f7f9;
     padding: 20px;
@@ -85,7 +90,6 @@ const EditButton1 = styled.button`
         background: #c7c7c7;
     }
 `;
-
 const AddButton = styled.button`
     position: absolute;
     top: 20px;
@@ -102,7 +106,6 @@ const AddButton = styled.button`
         background-color: #218838;
     }
 `;
-
 const BackButton = styled.button`
     position: absolute;
     top: 20px;
@@ -166,6 +169,8 @@ const Notification = styled(motion.div)`
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 `;
 
+
+
 function BooksDashboard() {
     const navigate = useNavigate();
     const [books, setBooks] = useState([]);
@@ -180,9 +185,6 @@ function BooksDashboard() {
     const name = localStorage.getItem("name");
     const [searchTerm, setSearchTerm] = useState("");
 
-
-
-
     useEffect(() => {
         fetchBooks();
     }, []);
@@ -190,7 +192,8 @@ function BooksDashboard() {
     const fetchBooks = async () => {
         try {
             const token = localStorage.getItem("token");
-            const response = await axios.get("http://localhost:8080/api/books", {
+            // FIXED: Use API_BASE_URL here
+            const response = await axios.get(`${API_BASE_URL}/api/books`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -198,12 +201,18 @@ function BooksDashboard() {
             setBooks(response.data);
         } catch (error) {
             console.error("Error fetching books:", error);
+            // Optional: Handle token expiry/401 here
+            if (error.response && error.response.status === 401) {
+                navigate("/login");
+            }
         }
     };
+
     const handleEditProfileClick = async () => {
         try {
             const token = localStorage.getItem("token");
-            const response = await axios.get(`http://localhost:8080/api/users/${userId}`, {
+            // FIXED: Use API_BASE_URL here
+            const response = await axios.get(`${API_BASE_URL}/api/users/${userId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -220,7 +229,8 @@ function BooksDashboard() {
         const token = localStorage.getItem("token");
 
         try {
-            const response = await fetch(`http://localhost:8080/api/books/download/${book.id}`, {
+            // FIXED: Use API_BASE_URL here
+            const response = await fetch(`${API_BASE_URL}/api/books/download/${book.id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -256,9 +266,11 @@ function BooksDashboard() {
             setNotification(null);
         }, 1500);
     };
-    const sortedBooks = [...books].sort((a, b) => {
-        const userIdNumber = parseInt(userId);
 
+    // Note: It's good practice to wrap parseInt in case userId is null/undefined
+    const userIdNumber = userId ? parseInt(userId) : null;
+
+    const sortedBooks = [...books].sort((a, b) => {
         const isAUser = a.user?.id === userIdNumber;
         const isBUser = b.user?.id === userIdNumber;
 
@@ -270,6 +282,9 @@ function BooksDashboard() {
 
     return (
         <Container>
+            {/* ------------------------------------------------------------------ */}
+            {/* All UI/Render Logic is unchanged, only API calls were updated.     */}
+            {/* ------------------------------------------------------------------ */}
             {role === "USER" && (
                 <LogoutButton
                     onClick={() => {
@@ -317,16 +332,16 @@ function BooksDashboard() {
             )}
             {role === "ADMIN" && (
                 <>
-            <Text>Logged in as {username}</Text>
-            <Group1>
-            <Text>Your Role: {role}</Text>
-            <SearchInput
-                type="text"
-                placeholder="Search"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            </Group1>
+                    <Text>Logged in as {username}</Text>
+                    <Group1>
+                        <Text>Your Role: {role}</Text>
+                        <SearchInput
+                            type="text"
+                            placeholder="Search"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </Group1>
                 </>
             )}
             {books.length === 0 && (
@@ -347,12 +362,12 @@ function BooksDashboard() {
                             <strong>{book.title}</strong><br/>
                             Uploaded by {book.user?.name}<br/> at {book.uploadDate}
                         </BookInfo>
-                    <ButtonGroup>
-                        {(role === "ADMIN" || book?.user?.username === username) && (
-                            <EditButton onClick={() => setEditBook(book)}>Edit</EditButton>
-                        )}
-                        <DownloadButton onClick={() => handleDownload(book)}>Download</DownloadButton>
-                    </ButtonGroup>
+                        <ButtonGroup>
+                            {(role === "ADMIN" || book?.user?.username === username) && (
+                                <EditButton onClick={() => setEditBook(book)}>Edit</EditButton>
+                            )}
+                            <DownloadButton onClick={() => handleDownload(book)}>Download</DownloadButton>
+                        </ButtonGroup>
                     </Card>
                 );
             })}
@@ -363,6 +378,8 @@ function BooksDashboard() {
                     <UploadBookModal
                         onClose={() => setShowModal(false)}
                         onBookAdded={handleBookAdded}
+                        // IMPORTANT: Pass API_BASE_URL to child components if they make API calls
+                        apiBaseUrl={API_BASE_URL}
                     />
                 )}
             </AnimatePresence>
@@ -381,6 +398,8 @@ function BooksDashboard() {
                             setNotification({message: "Book deleted successfully!", success: true});
                             setTimeout(() => setNotification(null), 1500);
                         }}
+                        // IMPORTANT: Pass API_BASE_URL to child components if they make API calls
+                        apiBaseUrl={API_BASE_URL}
                     />
                 )}
             </AnimatePresence>
@@ -408,6 +427,8 @@ function BooksDashboard() {
                             localStorage.clear();
                             navigate("/login");
                         }}
+                        // IMPORTANT: Pass API_BASE_URL to child components if they make API calls
+                        apiBaseUrl={API_BASE_URL}
                     />
                 )}
             </AnimatePresence>

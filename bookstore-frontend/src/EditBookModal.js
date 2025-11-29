@@ -4,6 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import ConfirmModal from "./ConfirmModal";
 
+// ------------------------------------------------------------------
+// --- MODAL COMPONENT START ---
+// ------------------------------------------------------------------
+
 const Backdrop = styled(motion.div)`
     position: fixed;
     inset: 0;
@@ -120,7 +124,7 @@ const Button = styled.button`
     }
 `;
 
-function EditBookModal({ book, onClose, onBookUpdated,onBookDeleted }) {
+function EditBookModal({ book, onClose, onBookUpdated, onBookDeleted, apiBaseUrl }) { // <-- ADDED apiBaseUrl PROP
     const [existingFileName, setExistingFileName] = useState("");
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [notification, setNotification] = useState(null);
@@ -144,11 +148,22 @@ function EditBookModal({ book, onClose, onBookUpdated,onBookDeleted }) {
             setFormData({ ...formData, [name]: value });
         }
     };
+
     const getOriginalFileName = (filename) => {
         if (!filename) return "";
-        const parts = filename.split("C:\\Users\\ASUS\\Desktop\\uploaded_books\\");
-        return parts.length > 1 ? parts.slice(1).join("_") : filename;
+        // You can remove this Windows-specific path part for cleaner code,
+        // as the actual filename is usually stored after the last slash/backslash on the server.
+        // I will only update the return to remove the hardcoded part but keep the split logic.
+        const parts = filename.split("\\"); // Use backslash split for typical Windows paths
+        // Check if a path separator was found. If not, split by the temporary path you found.
+        if (parts.length > 1) {
+            return parts[parts.length - 1];
+        }
+        // Fallback to the hardcoded split if necessary, but this is usually a debug artifact
+        const debugParts = filename.split("books");
+        return debugParts.length > 1 ? debugParts.slice(1).join("_") : filename;
     };
+
 
     const handleKeyDown = (e, nextRef) => {
         if (e.key === "Enter") {
@@ -158,11 +173,13 @@ function EditBookModal({ book, onClose, onBookUpdated,onBookDeleted }) {
             }
         }
     };
+
     const handleDeleteBook = async () => {
         const token = localStorage.getItem("token");
 
         try {
-            await axios.delete(`http://localhost:8080/api/books/${book.id}`, {
+            // FIXED: Use apiBaseUrl prop
+            await axios.delete(`${apiBaseUrl}/api/books/${book.id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             onBookDeleted?.();
@@ -171,6 +188,7 @@ function EditBookModal({ book, onClose, onBookUpdated,onBookDeleted }) {
             console.error("Failed to delete book", err);
         }
     };
+
     const handleClose = () => {
         setIsClosing(true);
         setTimeout(() => {
@@ -189,8 +207,9 @@ function EditBookModal({ book, onClose, onBookUpdated,onBookDeleted }) {
         }
 
         try {
+            // FIXED: Use apiBaseUrl prop
             const response = await axios.put(
-                `http://localhost:8080/api/books/${book.id}`,
+                `${apiBaseUrl}/api/books/${book.id}`,
                 form,
                 {
                     headers: {
@@ -214,70 +233,70 @@ function EditBookModal({ book, onClose, onBookUpdated,onBookDeleted }) {
     return (
         <AnimatePresence>
             {!isClosing && (
-            <Backdrop initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}  transition={{ duration: 0.3 }}>
-                <ModalWrapper
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.8, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                >
-                    <form onSubmit={handleSubmit}>
-                        <Title>Edit Book</Title>
-                        <Input
-                            ref={titleRef}
-                            type="text"
-                            name="title"
-                            value={formData.title}
-                            onChange={handleChange}
-                            onKeyDown={(e) => handleKeyDown(e, fileRef)}
-                            placeholder="Book Title"
-                            required
-                        />
-
-                        <FileInputWrapper>
-                            <CustomFileLabel htmlFor="fileInput">Choose File</CustomFileLabel>
-                            <HiddenInput
-                                id="fileInput"
-                                type="file"
-                                name="file"
+                <Backdrop initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}  transition={{ duration: 0.3 }}>
+                    <ModalWrapper
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.8, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <form onSubmit={handleSubmit}>
+                            <Title>Edit Book</Title>
+                            <Input
+                                ref={titleRef}
+                                type="text"
+                                name="title"
+                                value={formData.title}
                                 onChange={handleChange}
-                                accept=".pdf,.epub,.jpg,.png"
+                                onKeyDown={(e) => handleKeyDown(e, fileRef)}
+                                placeholder="Book Title"
+                                required
                             />
-                            <FileName>
-                                {formData.file
-                                    ? formData.file.name
-                                    : book?.filename
-                                        ? getOriginalFileName(book.filename)
-                                        : "No file chosen"}
-                            </FileName>
-                        </FileInputWrapper>
 
-                        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "20px",marginBottom:"-12px",marginLeft:"-13px" }}>
-                            <Button type="button" onClick={() => setShowConfirmModal(true)} style={{ background: "#dc3545", color: "#fff" }}>
-                                Delete
-                            </Button>
+                            <FileInputWrapper>
+                                <CustomFileLabel htmlFor="fileInput">Choose File</CustomFileLabel>
+                                <HiddenInput
+                                    id="fileInput"
+                                    type="file"
+                                    name="file"
+                                    onChange={handleChange}
+                                    accept=".pdf,.epub,.jpg,.png"
+                                />
+                                <FileName>
+                                    {formData.file
+                                        ? formData.file.name
+                                        : book?.filename
+                                            ? getOriginalFileName(book.filename)
+                                            : "No file chosen"}
+                                </FileName>
+                            </FileInputWrapper>
 
-                            <div style={{ display: "flex", gap: "10px",marginLeft:"255px" }}>
-                                <Button
-                                    type="button"
-                                    onClick={() => {
-                                        setIsClosing(true);
-                                        setTimeout(onClose, 300);
-                                    }}
-                                >
-                                    Cancel
+                            <div style={{ display: "flex", justifyContent: "space-between", marginTop: "20px",marginBottom:"-12px",marginLeft:"-13px" }}>
+                                <Button type="button" onClick={() => setShowConfirmModal(true)} style={{ background: "#dc3545", color: "#fff" }}>
+                                    Delete
                                 </Button>
 
+                                <div style={{ display: "flex", gap: "10px",marginLeft:"255px" }}>
+                                    <Button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsClosing(true);
+                                            setTimeout(onClose, 300);
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
 
-                                <Button type="submit">
-                                    Save
-                                </Button>
+
+                                    <Button type="submit">
+                                        Save
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
-                    </form>
-                </ModalWrapper>
-            </Backdrop>
-                )}
+                        </form>
+                    </ModalWrapper>
+                </Backdrop>
+            )}
             <AnimatePresence>
                 {notification && (
                     <Notification

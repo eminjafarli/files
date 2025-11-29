@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 
+// --- Styled Components (omitted for brevity) ---
 const Backdrop = styled(motion.div)`
     position: fixed;
     inset: 0;
@@ -92,8 +93,9 @@ const Button = styled.button`
         background: #0056b3;
     }
 `;
+// --- End Styled Components ---
 
-function UploadBookModal({ onClose, onBookAdded, userId }) {
+function UploadBookModal({ onClose, onBookAdded, userId, apiBaseUrl }) { // <-- ADDED apiBaseUrl PROP
     const [notification, setNotification] = useState(null);
     const [formData, setFormData] = useState({ title: "", file: null });
     const formRef = useRef();
@@ -117,7 +119,8 @@ function UploadBookModal({ onClose, onBookAdded, userId }) {
         if (userId) form.append("userId", userId);
 
         try {
-            const response = await axios.post("http://localhost:8080/api/books", form, {
+            // FIXED: Use apiBaseUrl prop
+            const response = await axios.post(`${apiBaseUrl}/api/books`, form, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 

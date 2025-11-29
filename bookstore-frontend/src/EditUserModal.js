@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import ConfirmModal from "./ConfirmModal";
 
+// --- Styled Components (omitted for brevity) ---
 const Backdrop = styled(motion.div)`
     position: fixed;
     inset: 0;
@@ -101,7 +102,9 @@ const Notification = styled(motion.div)`
     z-index: 1000;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 `;
-function EditUserModal({ user, onClose,onUserDeleted }) {
+
+// Corrected function name to match the file/context
+function EditUserModal({ user, onClose, onUserDeleted, apiBaseUrl }) { // <-- ADDED apiBaseUrl PROP
     const [formData, setFormData] = useState({ username: "", name: "", role: "" });
     const [notification, setNotification] = useState(null);
     const nameInputRef = useRef();
@@ -137,7 +140,8 @@ function EditUserModal({ user, onClose,onUserDeleted }) {
     const handleDeleteUser = async () => {
         const token = localStorage.getItem("token");
         try {
-            await axios.delete(`http://localhost:8080/api/users/delete/${user.id}`, {
+            // FIXED: Use apiBaseUrl prop
+            await axios.delete(`${apiBaseUrl}/api/users/delete/${user.id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             onUserDeleted?.();
@@ -155,7 +159,8 @@ function EditUserModal({ user, onClose,onUserDeleted }) {
         try {
             const token = localStorage.getItem("token");
 
-            const response = await fetch(`http://localhost:8080/api/users/${user.id}`, {
+            // FIXED: Use apiBaseUrl prop
+            const response = await fetch(`${apiBaseUrl}/api/users/${user.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",

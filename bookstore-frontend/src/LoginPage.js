@@ -4,6 +4,11 @@ import styled from "styled-components";
 import {AnimatePresence, motion} from "framer-motion";
 import {jwtDecode} from "jwt-decode";
 
+// ------------------------------------------------------------------
+// --- FIXED: Access Environment Variable ---
+// ------------------------------------------------------------------
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const Container = styled.div`
     height: 97vh;
     display: flex;
@@ -12,7 +17,7 @@ const Container = styled.div`
     background: #ffffff;
     font-family: Arial, sans-serif;
 `;
-
+// ... (All other styled components are omitted here for brevity)
 const FormBox = styled.div`
     background: #F7F7F9;
     padding: 30px;
@@ -47,7 +52,7 @@ const Input = styled.input`
     font-size: 15px;
     border: 1px solid #ccc;
     border-radius: 6px;
-    
+
 `;
 
 const Button = styled.button`
@@ -80,6 +85,7 @@ const SignUpLink = styled.div`
     }
 `;
 
+
 function LoginPage() {
     const [notification, setNotification] = useState(null);
     const [formData, setFormData] = useState({ username: "", password: "" });
@@ -91,7 +97,8 @@ function LoginPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch("http://localhost:8080/api/auth/login", {
+            // FIXED: Use API_BASE_URL here
+            const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),
@@ -129,9 +136,12 @@ function LoginPage() {
                 }, 1500);
             }
         } catch (err) {
-            setNotification({ message: "Error Occurred.", success: false });
+            // Log the error for debugging purposes
+            console.error("Login API Error:", err);
+            setNotification({ message: "Error Occurred. Check connection.", success: false });
             setTimeout(() => {
-                window.location.reload();
+                // Changing from window.location.reload() to setNotification(null) for a better UX
+                setNotification(null);
             }, 1500);
         }
     };
